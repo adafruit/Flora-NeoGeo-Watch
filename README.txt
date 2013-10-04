@@ -13,4 +13,4 @@ This code example requires the Time library which can be downloaded from http://
 
 This code example requires the Pololu LSM303 Compass Module library which can be downloaded from https://github.com/pololu/LSM303.
 
-This code example also requires the Adafruit Flora Pixel library which can be downloaded from https://github.com/adafruit/Adafruit-Flora-Pixel-Library
+This code example also requires the Adafruit NeoPixel library which can be downloaded from https://github.com/adafruit/Adafruit_NeoPixel

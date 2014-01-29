@@ -502,7 +502,7 @@ void compassCheck() {
   if (millis() - compassTimer > 50) {
     compassTimer = millis(); // reset the timer
     compass.read();
-    compassReading = compass.heading((LSM303::vector){0,-1,0}); 
+    compassReading = compass.heading((LSM303::vector<int>){0,-1,0}); 
     }  
 }  
   

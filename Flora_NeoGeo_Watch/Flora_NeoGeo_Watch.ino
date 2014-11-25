@@ -15,10 +15,12 @@
 #include <SoftwareSerial.h>
 #include <Time.h>
 #include <Wire.h>
-#include <LSM303.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_LSM303_U.h>
 
 Adafruit_GPS GPS(&Serial1);
-LSM303 compass;
+/* Assign a unique ID to this sensor at the same time */
+Adafruit_LSM303_Mag_Unified mag = Adafruit_LSM303_Mag_Unified(12345);
      
 // Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console
 // Set to 'true' if you want to debug and listen to the raw GPS sentences
@@ -120,15 +122,13 @@ void setup()
   // Request updates on antenna status, comment out to keep quiet
   GPS.sendCommand(PGCMD_ANTENNA);
   
-  compass.init();
-  compass.enableDefault();
-  
-  // Calibration values. Use the Calibrate example program to get the values for
-  // your compass.
-  compass.m_min.x = -809; compass.m_min.y = -491; compass.m_min.z = -793;
-  compass.m_max.x = +451; compass.m_max.y = +697; compass.m_max.z = 438;
-  
-  delay(1000);
+  /* Initialise the sensor */
+  if(!mag.begin())
+  {
+    /* There was a problem detecting the LSM303 ... check your connections */
+    Serial.println("Ooops, no LSM303 detected ... Check your wiring!");
+    while(1);
+  }
   // Ask for firmware version
   Serial1.println(PMTK_Q_RELEASE);
   
@@ -500,9 +500,23 @@ void compassCheck() {
     
   // approximately every 10 seconds or so, update time
   if (millis() - compassTimer > 50) {
+    /* Get a new sensor event */ 
+    sensors_event_t event; 
+    mag.getEvent(&event);
+    
+    float Pi = 3.14159;
+    
     compassTimer = millis(); // reset the timer
-    compass.read();
-    compassReading = compass.heading((LSM303::vector<int>){0,-1,0}); 
+    
+    // Calculate the angle of the vector y,x
+    float heading = (atan2(event.magnetic.y,event.magnetic.x) * 180) / Pi;
+    
+    // Normalize to 0-360
+    if (heading < 0)
+    {
+      heading = 360 + heading;
+    }
+    compassReading = heading; 
     }  
 }  
   
@@ -518,7 +532,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading > 348.75)||(compassHeading < 11.25)) {
     //Serial.println("  N");
     //Serial.println("Forward");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED;
     } else {
       tempDir = topLED;
@@ -528,7 +542,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 11.25)&&(compassHeading < 33.75)) {
     //Serial.println("NNE");
     //Serial.println("Go Right");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 1;
     } else {
       tempDir = topLED + 1;
@@ -538,7 +552,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 33.75)&&(compassHeading < 56.25)) {
     //Serial.println(" NE");
     //Serial.println("Go Right");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 2;
     } else {
       tempDir = topLED + 2;
@@ -548,7 +562,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 56.25)&&(compassHeading < 78.75)) {
     //Serial.println("ENE");
     //Serial.println("Go Right");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 3;
     } else {
       tempDir = topLED + 3;
@@ -558,7 +572,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 78.75)&&(compassHeading < 101.25)) {
     //Serial.println("  E");
     //Serial.println("Go Right");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 4;
     } else {
       tempDir = topLED + 4;
@@ -568,7 +582,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 101.25)&&(compassHeading < 123.75)) {
     //Serial.println("ESE");
     //Serial.println("Go Right");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 5;
     } else {
       tempDir = topLED + 5;
@@ -578,7 +592,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 123.75)&&(compassHeading < 146.25)) {
     //Serial.println(" SE");
     //Serial.println("Go Right");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 6;
     } else {
       tempDir = topLED + 6;
@@ -588,7 +602,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 146.25)&&(compassHeading < 168.75)) {
     //Serial.println("SSE");
     //Serial.println("Go Right");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 7;
     } else {
       tempDir = topLED + 7;
@@ -598,7 +612,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 168.75)&&(compassHeading < 191.25)) {
     //Serial.println("  S");
     //Serial.println("Turn Around");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 8;
     } else {
       tempDir = topLED + 8;
@@ -608,7 +622,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 191.25)&&(compassHeading < 213.75)) {
     //Serial.println("SSW");
     //Serial.println("Go Left");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 9;
     } else {
       tempDir = topLED + 9;
@@ -618,7 +632,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 213.75)&&(compassHeading < 236.25)) {
     //Serial.println(" SW");
     //Serial.println("Go Left");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 10;
     } else {
       tempDir = topLED + 10;
@@ -628,7 +642,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 236.25)&&(compassHeading < 258.75)) {
     //Serial.println("WSW");
     //Serial.println("Go Left");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 11;
     } else {
       tempDir = topLED + 11;
@@ -638,7 +652,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 258.75)&&(compassHeading < 281.25)) {
     //Serial.println("  W");
     //Serial.println("Go Left");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 12;
     } else {
       tempDir = topLED + 12;
@@ -648,7 +662,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 281.25)&&(compassHeading < 303.75)) {
     //Serial.println("WNW");
     //Serial.println("Go Left");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 13;
     } else {
       tempDir = topLED + 13;
@@ -658,7 +672,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 303.75)&&(compassHeading < 326.25)) {
     //Serial.println(" NW");
     //Serial.println("Go Left");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 14;
     } else {
       tempDir = topLED + 14;
@@ -668,7 +682,7 @@ void compassDirection(int compassHeading)
   if ((compassHeading >= 326.25)&&(compassHeading < 348.75)) {
     //Serial.println("NWN");
     //Serial.println("Go Left");
-    if (mode == 1 ) {
+    if (mode == 2 ) {
       tempDir = topLED - 15;
     } else {
       tempDir = topLED + 15;

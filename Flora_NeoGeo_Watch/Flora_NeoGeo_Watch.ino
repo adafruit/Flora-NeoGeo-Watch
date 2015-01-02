@@ -258,23 +258,7 @@ if (start == 1) {
     float gpsMin = (minute() + (second()/60.0));
     unsigned int ledMin = 0;
     int minTemp = 0;
-    if (gpsMin <= 1.875) minTemp = topLED;
-    if ((gpsMin > 1.875) && (gpsMin <= 5.625)) minTemp = topLED - 1;
-    if ((gpsMin > 5.625) && (gpsMin <= 9.375)) minTemp = topLED - 2;
-    if ((gpsMin > 9.375) && (gpsMin <= 13.125)) minTemp = topLED - 3;
-    if ((gpsMin > 13.125) && (gpsMin <= 16.875)) minTemp = topLED - 4;
-    if ((gpsMin > 16.875) && (gpsMin <= 20.625)) minTemp = topLED - 5;
-    if ((gpsMin > 20.625) && (gpsMin <= 24.375)) minTemp = topLED - 6;
-    if ((gpsMin > 24.375) && (gpsMin <= 28.125)) minTemp = topLED - 7;
-    if ((gpsMin > 28.125) && (gpsMin <= 31.875)) minTemp = topLED - 8;
-    if ((gpsMin > 31.875) && (gpsMin <= 35.625)) minTemp = topLED - 9;
-    if ((gpsMin > 35.625) && (gpsMin <= 39.375)) minTemp = topLED - 10;
-    if ((gpsMin > 39.375) && (gpsMin <= 43.125)) minTemp = topLED - 11;
-    if ((gpsMin > 43.125) && (gpsMin <= 46.875)) minTemp = topLED - 12;
-    if ((gpsMin > 46.875) && (gpsMin <= 50.625)) minTemp = topLED - 13;
-    if ((gpsMin > 50.625) && (gpsMin <= 54.375)) minTemp = topLED - 14;
-    if ((gpsMin > 54.375) && (gpsMin <= 58.125)) minTemp = topLED - 15;
-    if (gpsMin > 58.125) minTemp = topLED - 16;
+    minTemp = topLED - (gpsMin + 1.875)/3.75;
     
     if (minTemp < 0) {
       ledMin = minTemp + 16;
@@ -286,23 +270,7 @@ if (start == 1) {
     if (gpsHour > 12) { gpsHour = gpsHour - 12; }
     unsigned int ledHour = 0;
     int hourTemp = 0;
-    if (gpsHour <= 0.375) hourTemp = topLED;
-    if ((gpsHour > 0.375) && (gpsHour <= 1.125)) hourTemp = topLED - 1;
-    if ((gpsHour > 1.125) && (gpsHour <= 1.875)) hourTemp = topLED - 2;
-    if ((gpsHour > 1.875) && (gpsHour <= 2.625)) hourTemp = topLED - 3;
-    if ((gpsHour > 2.625) && (gpsHour <= 3.375)) hourTemp = topLED - 4;
-    if ((gpsHour > 3.375) && (gpsHour <= 4.125)) hourTemp = topLED - 5;
-    if ((gpsHour > 4.125) && (gpsHour <= 4.875)) hourTemp = topLED - 6;
-    if ((gpsHour > 4.875) && (gpsHour <= 5.625)) hourTemp = topLED - 7;
-    if ((gpsHour > 5.625) && (gpsHour <= 6.375)) hourTemp = topLED - 8;
-    if ((gpsHour > 6.375) && (gpsHour <= 7.125)) hourTemp = topLED - 9;
-    if ((gpsHour > 7.125) && (gpsHour <= 7.875)) hourTemp = topLED - 10;
-    if ((gpsHour > 7.875) && (gpsHour <= 8.625)) hourTemp = topLED - 11;
-    if ((gpsHour > 8.625) && (gpsHour <= 9.375)) hourTemp = topLED - 12;
-    if ((gpsHour > 9.375) && (gpsHour <= 10.125)) hourTemp = topLED - 13;
-    if ((gpsHour > 10.125) && (gpsHour <= 10.875)) hourTemp = topLED - 14;
-    if ((gpsHour > 10.875) && (gpsHour <= 11.625)) hourTemp = topLED - 15;
-    if (gpsHour > 11.625) hourTemp = topLED - 16;
+    hourTemp = topLED - (gpsHour + .375)/.75;
     
     if (hourTemp < 0) {
       ledHour = hourTemp + 16;
@@ -539,154 +507,9 @@ void compassDirection(int compassHeading)
     }
   }
 
-  if ((compassHeading >= 11.25)&&(compassHeading < 33.75)) {
-    //Serial.println("NNE");
-    //Serial.println("Go Right");
-    if (mode == 2 ) {
-      tempDir = topLED - 1;
-    } else {
-      tempDir = topLED + 1;
-    }
-  }  
-  
-  if ((compassHeading >= 33.75)&&(compassHeading < 56.25)) {
-    //Serial.println(" NE");
-    //Serial.println("Go Right");
-    if (mode == 2 ) {
-      tempDir = topLED - 2;
-    } else {
-      tempDir = topLED + 2;
-    }
-  }
-  
-  if ((compassHeading >= 56.25)&&(compassHeading < 78.75)) {
-    //Serial.println("ENE");
-    //Serial.println("Go Right");
-    if (mode == 2 ) {
-      tempDir = topLED - 3;
-    } else {
-      tempDir = topLED + 3;
-    }
-  }
-  
-  if ((compassHeading >= 78.75)&&(compassHeading < 101.25)) {
-    //Serial.println("  E");
-    //Serial.println("Go Right");
-    if (mode == 2 ) {
-      tempDir = topLED - 4;
-    } else {
-      tempDir = topLED + 4;
-    }
-  }
-  
-  if ((compassHeading >= 101.25)&&(compassHeading < 123.75)) {
-    //Serial.println("ESE");
-    //Serial.println("Go Right");
-    if (mode == 2 ) {
-      tempDir = topLED - 5;
-    } else {
-      tempDir = topLED + 5;
-    }
-  }
-  
-  if ((compassHeading >= 123.75)&&(compassHeading < 146.25)) {
-    //Serial.println(" SE");
-    //Serial.println("Go Right");
-    if (mode == 2 ) {
-      tempDir = topLED - 6;
-    } else {
-      tempDir = topLED + 6;
-    }
-  }
-  
-  if ((compassHeading >= 146.25)&&(compassHeading < 168.75)) {
-    //Serial.println("SSE");
-    //Serial.println("Go Right");
-    if (mode == 2 ) {
-      tempDir = topLED - 7;
-    } else {
-      tempDir = topLED + 7;
-    }
-  }
-  
-  if ((compassHeading >= 168.75)&&(compassHeading < 191.25)) {
-    //Serial.println("  S");
-    //Serial.println("Turn Around");
-    if (mode == 2 ) {
-      tempDir = topLED - 8;
-    } else {
-      tempDir = topLED + 8;
-    }
-  }
-  
-  if ((compassHeading >= 191.25)&&(compassHeading < 213.75)) {
-    //Serial.println("SSW");
-    //Serial.println("Go Left");
-    if (mode == 2 ) {
-      tempDir = topLED - 9;
-    } else {
-      tempDir = topLED + 9;
-    }
-  }
-  
-  if ((compassHeading >= 213.75)&&(compassHeading < 236.25)) {
-    //Serial.println(" SW");
-    //Serial.println("Go Left");
-    if (mode == 2 ) {
-      tempDir = topLED - 10;
-    } else {
-      tempDir = topLED + 10;
-    }
-  }
-  
-  if ((compassHeading >= 236.25)&&(compassHeading < 258.75)) {
-    //Serial.println("WSW");
-    //Serial.println("Go Left");
-    if (mode == 2 ) {
-      tempDir = topLED - 11;
-    } else {
-      tempDir = topLED + 11;
-    }
-  }
-  
-  if ((compassHeading >= 258.75)&&(compassHeading < 281.25)) {
-    //Serial.println("  W");
-    //Serial.println("Go Left");
-    if (mode == 2 ) {
-      tempDir = topLED - 12;
-    } else {
-      tempDir = topLED + 12;
-    }
-  }
-  
-  if ((compassHeading >= 281.25)&&(compassHeading < 303.75)) {
-    //Serial.println("WNW");
-    //Serial.println("Go Left");
-    if (mode == 2 ) {
-      tempDir = topLED - 13;
-    } else {
-      tempDir = topLED + 13;
-    }
-  }
-  
-  if ((compassHeading >= 303.75)&&(compassHeading < 326.25)) {
-    //Serial.println(" NW");
-    //Serial.println("Go Left");
-    if (mode == 2 ) {
-      tempDir = topLED - 14;
-    } else {
-      tempDir = topLED + 14;
-    }
-  }
-  
-  if ((compassHeading >= 326.25)&&(compassHeading < 348.75)) {
-    //Serial.println("NWN");
-    //Serial.println("Go Left");
-    if (mode == 2 ) {
-      tempDir = topLED - 15;
-    } else {
-      tempDir = topLED + 15;
-    }
+  for (float i = 11.25; i <= 348.5; i+= .25) {
+    int x = (i + 11.25)/22.5;
+    Serial.print(i); Serial.print(": "); Serial.println(x);
   }
   
   if (tempDir > 15) {

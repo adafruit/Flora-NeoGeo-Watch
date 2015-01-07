@@ -9,7 +9,7 @@
 // ------> http://adafruit.com/products/1059
 // Pick one up today at the Adafruit electronics shop
 // and help support open source hardware & software! -ada
-     
+
 #include <Adafruit_GPS.h>
 #include <Adafruit_NeoPixel.h>
 #include <SoftwareSerial.h>
@@ -21,11 +21,11 @@
 Adafruit_GPS GPS(&Serial1);
 /* Assign a unique ID to this sensor at the same time */
 Adafruit_LSM303_Mag_Unified mag = Adafruit_LSM303_Mag_Unified(12345);
-     
+
 // Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console
 // Set to 'true' if you want to debug and listen to the raw GPS sentences
 #define GPSECHO false
-     
+
 // this keeps track of whether we're using the interrupt
 // off by default!
 boolean usingInterrupt = false;
@@ -35,19 +35,19 @@ boolean usingInterrupt = false;
 //--------------------------------------------------|
 //Please enter the latitude and longitude of your   |
 //desired destination:                              |
-  #define GEO_LAT                44.998531
-  #define GEO_LON               -93.230322
+#define GEO_LAT                44.726853
+#define GEO_LON               -93.452076
 //--------------------------------------------------|
 //Your NeoPixel ring may not line up with ours.     |
 //Enter which NeoPixel led is your top LED (0-15).  |
-  #define TOP_LED                1
+#define TOP_LED                1
 //--------------------------------------------------|
 //Your compass module may not line up with ours.    |
 //Once you run compass mode, compare to a separate  |
 //compass (like one found on your smartphone).      |
 //Point your TOP_LED north, then count clockwise    |
 //how many LEDs away from TOP_LED the lit LED is    |
-  #define LED_OFFSET             0
+#define LED_OFFSET             0
 //--------------------------------------------------|
 
 // Navigation location
@@ -56,13 +56,13 @@ float targetLon = GEO_LON;
 
 // Trip distance
 float tripDistance;
-     
+
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(16, 6, NEO_GRB + NEO_KHZ800);
 
 // Offset hours from gps time (UTC)
 //const int offset = 1;   // Central European Time
-const int offset = -4;  // Eastern Daylight Time (USA)
-//const int offset = -5;  // Central Daylight Time (USA)
+//const int offset = -4;  // Eastern Daylight Time (USA)
+const int offset = -5;  // Central Daylight Time (USA)
 //const int offset = -8;  // Pacific Standard Time (USA)
 //const int offset = -7;  // Pacific Daylight Time (USA)
 
@@ -81,6 +81,10 @@ int dirLED_r = 0;
 int dirLED_g = 0;
 int dirLED_b = 255;
 int compassReading;
+
+// Calibration offsets
+float magxOffset = 2.55;
+float magyOffset = 27.95;
 
 // Pushbutton setup
 int buttonPin = 10;             // the number of the pushbutton pin
@@ -105,7 +109,7 @@ void setup()
   // also spit it out
   Serial.begin(115200);
   Serial.println("Adafruit GPS library basic test!");
-     
+
   // 9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
   GPS.begin(9600);
   // uncomment this line to turn on RMC (recommended minimum) and GGA (fix data) including altitude
@@ -118,10 +122,10 @@ void setup()
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1 Hz update rate
   // For the parsing code to work nicely and have time to sort thru the data, and
   // print it out we don't suggest using anything higher than 1 Hz
-     
+
   // Request updates on antenna status, comment out to keep quiet
   GPS.sendCommand(PGCMD_ANTENNA);
-  
+
   /* Initialise the sensor */
   if(!mag.begin())
   {
@@ -131,15 +135,15 @@ void setup()
   }
   // Ask for firmware version
   Serial1.println(PMTK_Q_RELEASE);
-  
+
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
-  
+
   // Make input & enable pull-up resistors on switch pins for pushbutton
   pinMode(buttonPin, INPUT);
   digitalWrite(buttonPin, HIGH); 
 }
-     
+
 uint32_t gpsTimer = millis();
 uint32_t startupTimer = millis();
 uint32_t compassTimer = millis();
@@ -149,13 +153,13 @@ void loop() // run over and over again
   compassCheck();
   // read the state of the switch into a local variable:
   int buttonState = digitalRead(buttonPin);
-  
+
   if (buttonState == LOW) {
     buttonCheck();
   }
-  
+
   lastButtonState = buttonState;
-  
+
   //Serial.println(buttonState);
   // read data from the GPS in the 'main loop'
   char c = GPS.read();
@@ -171,10 +175,10 @@ void loop() // run over and over again
     if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
       return; // we can fail to parse a sentence in which case we should just wait for another
   }
-  
+
   // if millis() or timer wraps around, we'll just reset it
   if (gpsTimer > millis()) gpsTimer = millis();
-  
+
   if (start == 0) {
     if (GPS.fix) {
       // set the Time to the latest GPS reading
@@ -197,20 +201,20 @@ void loop() // run over and over again
       delay(500);
     }
   }
-  
+
   if (GPS.fix) {
     fLat = decimalDegrees(GPS.latitude, GPS.lat);
     fLon = decimalDegrees(GPS.longitude, GPS.lon);
   }
-  
+
   if (mode == 0) {
     clockMode();
   }
-  
+
   if (mode == 1) {
     navMode();
   }
-  
+
   if (mode == 2) {
     compassMode();
   }
@@ -219,9 +223,9 @@ void loop() // run over and over again
 // Fill the dots one after the other with a color
 void colorWipe(uint32_t c, uint8_t wait) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, c);
-      strip.show();
-      delay(wait);
+    strip.setPixelColor(i, c);
+    strip.show();
+    delay(wait);
   }
 }
 
@@ -231,17 +235,18 @@ void buttonCheck() {
   if (buttonState == LOW && lastButtonState == HIGH) {
     buttonHoldTime = millis();
   }
-  
+
   if (buttonState == LOW && lastButtonState == LOW) {
     if ((millis() - buttonHoldTime) > buttonHoldDelay) {
-      
+
       if(mode == 2) {
         mode = 0;
         lastMin = 16;
         lastHour = 16;
         colorWipe(strip.Color(0, 0, 0), 20);
         buttonHoldTime = millis();
-      } else {
+      } 
+      else {
         mode = mode + 1;
         colorWipe(strip.Color(0, 0, 0), 20);
         buttonHoldTime = millis();
@@ -251,30 +256,34 @@ void buttonCheck() {
 }
 
 void clockMode() {
-if (start == 1) {
+  if (start == 1) {
     strip.setPixelColor(startLEDlast, strip.Color(0, 0, 0));
     strip.show();
-    
+
     float gpsMin = (minute() + (second()/60.0));
     unsigned int ledMin = 0;
     int minTemp = 0;
     minTemp = topLED - (gpsMin + 1.875)/3.75;
-    
+
     if (minTemp < 0) {
       ledMin = minTemp + 16;
-    } else {
+    } 
+    else {
       ledMin = minTemp;
     }
-    
+
     float gpsHour = (hour() + (minute()/60.0));
-    if (gpsHour > 12) { gpsHour = gpsHour - 12; }
+    if (gpsHour > 12) { 
+      gpsHour = gpsHour - 12; 
+    }
     unsigned int ledHour = 0;
     int hourTemp = 0;
     hourTemp = topLED - (gpsHour + .375)/.75;
-    
+
     if (hourTemp < 0) {
       ledHour = hourTemp + 16;
-    } else {
+    } 
+    else {
       ledHour = hourTemp;
     }
 
@@ -286,7 +295,8 @@ if (start == 1) {
       lastCombined = 1;
       lastHour = ledHour;
       lastMin = ledMin;
-    } else {
+    } 
+    else {
       if (lastHour != ledHour) {
         strip.setPixelColor(lastHour, strip.Color(0, 0, 0));
         strip.setPixelColor(ledHour, strip.Color(255, 50, 0));
@@ -304,10 +314,11 @@ if (start == 1) {
         lastMin = ledMin;
       }
     }   
-  } else {
+  } 
+  else {
     // if millis() or timer wraps around, we'll just reset it
     if (startupTimer > millis()) startupTimer = millis();
-      
+
     // approximately every 10 seconds or so, update time
     if (millis() - startupTimer > 200) {
       startupTimer = millis(); // reset the timer
@@ -326,21 +337,23 @@ if (start == 1) {
 
 void navMode() {
   if (start == 1) {
-    
-  compassCheck();
-  
-  headingDistance((double)calc_dist(fLat, fLon, targetLat, targetLon));
-  
-  if ((calc_bearing(fLat, fLon, targetLat, targetLon) - compassReading) > 0) {
-    compassDirection(calc_bearing(fLat, fLon, targetLat, targetLon)-compassReading);
-  } else {
-    compassDirection(calc_bearing(fLat, fLon, targetLat, targetLon)-compassReading+360);
-  }
-  
-  } else {
+
+    compassCheck();
+
+    headingDistance((double)calc_dist(fLat, fLon, targetLat, targetLon));
+
+    if ((calc_bearing(fLat, fLon, targetLat, targetLon) - compassReading) > 0) {
+      compassDirection(calc_bearing(fLat, fLon, targetLat, targetLon)-compassReading);
+    } 
+    else {
+      compassDirection(calc_bearing(fLat, fLon, targetLat, targetLon)-compassReading+360);
+    }
+
+  } 
+  else {
     // if millis() or timer wraps around, we'll just reset it
     if (startupTimer > millis()) startupTimer = millis();
-      
+
     // approximately every 10 seconds or so, update time
     if (millis() - startupTimer > 200) {
       startupTimer = millis(); // reset the timer
@@ -384,31 +397,31 @@ void headingDistance(int fDist)
     dirLED_g = 0;
     dirLED_b = 0;
   }
-  
+
   if ((fDist >= (tripSegment*3))&&(fDist < (tripSegment*4))) {
     dirLED_r = 255;
     dirLED_g = 0;
     dirLED_b = 0;
   }
-  
+
   if ((fDist >= (tripSegment*2))&&(fDist < (tripSegment*3))) {
     dirLED_r = 255;
     dirLED_g = 255;
     dirLED_b = 0;
   }
-  
+
   if ((fDist >= tripSegment)&&(fDist < (tripSegment*2))) {
     dirLED_r = 255;
     dirLED_g = 255;
     dirLED_b = 0;
   }
-  
+
   if ((fDist >= 5)&&(fDist < tripSegment)) {
     dirLED_r = 255;
     dirLED_g = 255;
     dirLED_b = 0;
   }
-  
+
   if ((fDist < 5)) { // You are now within 5 meters of your destination.
     //Serial.println("Arrived at destination!");
     dirLED_r = 0;
@@ -451,89 +464,92 @@ float decimalDegrees(float nmeaCoord, char dir) {
   if (dir == 'W' || dir == 'S') {
     modifier = -1;
   }
-  
+
   return (wholeDegrees + (nmeaCoord - 100.0*wholeDegrees)/60.0) * modifier;
 }
 
 void compassMode() {
-    dirLED_r = 0;
-    dirLED_g = 0;
-    dirLED_b = 255;
-    compassDirection(compassReading);   
+  dirLED_r = 0;
+  dirLED_g = 0;
+  dirLED_b = 255;
+  compassDirection(compassReading);   
 }
 
 void compassCheck() {
-// if millis() or timer wraps around, we'll just reset it
+  // if millis() or timer wraps around, we'll just reset it
   if (compassTimer > millis()) compassTimer = millis();
-    
+
   // approximately every 10 seconds or so, update time
   if (millis() - compassTimer > 50) {
-    /* Get a new sensor event */ 
+    /* Get a new sensor event */
     sensors_event_t event; 
     mag.getEvent(&event);
-    
+
     float Pi = 3.14159;
-    
+
     compassTimer = millis(); // reset the timer
-    
+
     // Calculate the angle of the vector y,x
-    float heading = (atan2(event.magnetic.y,event.magnetic.x) * 180) / Pi;
-    
+    float heading = (atan2(event.magnetic.y + magyOffset,event.magnetic.x + magxOffset) * 180) / Pi;
+
     // Normalize to 0-360
     if (heading < 0)
     {
       heading = 360 + heading;
     }
     compassReading = heading; 
-    }  
+  }  
 }  
-  
+
 void compassDirection(int compassHeading) 
 {
   //Serial.print("Compass Direction: ");
   //Serial.println(compassHeading);
-  
+
   unsigned int ledDir = 2;
   int tempDir = 0;
   //Use this part of the code to determine which way you need to go.
   //Remember: this is not the direction you are heading, it is the direction to the destination (north = forward).
+
   if ((compassHeading > 348.75)||(compassHeading < 11.25)) {
-    //Serial.println("  N");
-    //Serial.println("Forward");
-    if (mode == 2 ) {
       tempDir = topLED;
-    } else {
-      tempDir = topLED;
+  }
+  for(int i = 1; i < 16; i++){
+    float pieSliceCenter = 45/2*i;
+    float pieSliceMin = pieSliceCenter - 11.25;
+    float pieSliceMax = pieSliceCenter + 11.25;
+    if ((compassHeading >= pieSliceMin)&&(compassHeading < pieSliceMax)) {
+      if (mode == 2 ) {
+        tempDir = topLED - i;
+      } 
+      else {
+        tempDir = topLED + i;
+      }
     }
   }
 
-  for (float i = 11.25; i <= 348.5; i+= .25) {
-    int x = (i + 11.25)/22.5;
-    Serial.print(i); Serial.print(": "); Serial.println(x);
-  }
-  
   if (tempDir > 15) {
-      ledDir = tempDir - 16;
-    } else {
-      ledDir = tempDir;
+    ledDir = tempDir - 16;
   }
-  
-  if (tempDir < 0) {
-      ledDir = tempDir + 16;
-    } else {
-      ledDir = tempDir;
+
+  else if (tempDir < 0) {
+    ledDir = tempDir + 16;
+  } 
+  else {
+    ledDir = tempDir;
   }
-  
+
   if (mode == 1) {
-   ledDir = ledDir + compassOffset;
-   if (ledDir > 15) {
-     ledDir = ledDir - 16;
-   }
-  } else {
-   ledDir = ledDir + compassOffset;
-   if (ledDir > 15) {
-     ledDir = ledDir - 16;
-   }
+    ledDir = ledDir + compassOffset;
+    if (ledDir > 15) {
+      ledDir = ledDir - 16;
+    }
+  } 
+  else {
+    ledDir = ledDir + compassOffset;
+    if (ledDir > 15) {
+      ledDir = ledDir - 16;
+    }
   }
 
   if (lastDir != ledDir) {

@@ -35,8 +35,8 @@ boolean usingInterrupt = false;
 //--------------------------------------------------|
 //Please enter the latitude and longitude of your   |
 //desired destination:                              |
-#define GEO_LAT                44.726853
-#define GEO_LON               -93.452076
+#define GEO_LAT                48.009551
+#define GEO_LON               -88.771131
 //--------------------------------------------------|
 //Your NeoPixel ring may not line up with ours.     |
 //Enter which NeoPixel led is your top LED (0-15).  |
